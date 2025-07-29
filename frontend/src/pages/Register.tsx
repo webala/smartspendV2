@@ -1,36 +1,57 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Wallet } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Link } from "react-router-dom";
+import { Eye, EyeOff, Wallet } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useRegister } from "@/hooks/auth";
+import type { ApiError } from "@/lib/api-client";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
+
+  const registerMutation = useRegister();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+
+    // Validation
+    if (
+      !formData.username ||
+      !formData.email ||
+      !formData.password ||
+      !formData.confirmPassword
+    ) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all fields.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       toast({
@@ -38,30 +59,38 @@ const Register = () => {
         description: "Please make sure your passwords match.",
         variant: "destructive",
       });
-      setIsLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
-      // Replace with actual API call
-      console.log('Register attempt:', formData);
-      
-      // Mock successful registration
-      setTimeout(() => {
-        toast({
-          title: "Account created!",
-          description: "Welcome to ExpenseTracker. You can now start managing your finances.",
-        });
-        navigate('/dashboard');
-        setIsLoading(false);
-      }, 1000);
+      await registerMutation.mutateAsync({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+
+      toast({
+        title: "Account created!",
+        description:
+          "Welcome to SmartSpend. You can now start managing your finances.",
+      });
     } catch (error) {
+      const apiError = error as ApiError;
       toast({
         title: "Registration failed",
-        description: "Something went wrong. Please try again.",
+        description:
+          apiError.error || "Something went wrong. Please try again.",
         variant: "destructive",
       });
-      setIsLoading(false);
     }
   };
 
@@ -75,7 +104,7 @@ const Register = () => {
           <div>
             <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
             <CardDescription>
-              Join ExpenseTracker and take control of your finances
+              Join SmartSpend and take control of your finances
             </CardDescription>
           </div>
         </CardHeader>
@@ -92,6 +121,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 className="h-11"
+                disabled={registerMutation.isPending}
               />
             </div>
             <div className="space-y-2">
@@ -105,6 +135,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 className="h-11"
+                disabled={registerMutation.isPending}
               />
             </div>
             <div className="space-y-2">
@@ -113,12 +144,13 @@ const Register = () => {
                 <Input
                   id="password"
                   name="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="Create a password"
                   value={formData.password}
                   onChange={handleChange}
                   required
                   className="h-11 pr-10"
+                  disabled={registerMutation.isPending}
                 />
                 <Button
                   type="button"
@@ -126,6 +158,7 @@ const Register = () => {
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={registerMutation.isPending}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -141,12 +174,13 @@ const Register = () => {
                 <Input
                   id="confirmPassword"
                   name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={showConfirmPassword ? "text" : "password"}
                   placeholder="Confirm your password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required
                   className="h-11 pr-10"
+                  disabled={registerMutation.isPending}
                 />
                 <Button
                   type="button"
@@ -154,6 +188,7 @@ const Register = () => {
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  disabled={registerMutation.isPending}
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -163,19 +198,24 @@ const Register = () => {
                 </Button>
               </div>
             </div>
-            <Button 
-              type="submit" 
-              className="w-full h-11" 
-              disabled={isLoading}
+            <Button
+              type="submit"
+              className="w-full h-11"
+              disabled={registerMutation.isPending}
             >
-              {isLoading ? 'Creating account...' : 'Create Account'}
+              {registerMutation.isPending
+                ? "Creating account..."
+                : "Create Account"}
             </Button>
           </form>
-          
+
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <Link to="/login" className="text-primary hover:text-primary/80 font-medium">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-primary hover:text-primary/80 font-medium"
+              >
                 Sign in
               </Link>
             </p>

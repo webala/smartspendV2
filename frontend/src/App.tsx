@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Expenses from "./pages/Expenses";
+import AddExpense from "./pages/AddExpense";
+import EditExpense from "./pages/EditExpense";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,12 +29,44 @@ const App = () => (
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="expenses" element={<Expenses />} />
-              <Route path="expenses/add" element={<div className="p-8 text-center"><h1 className="text-2xl">Add Expense Page</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
-              <Route path="expenses/edit/:id" element={<div className="p-8 text-center"><h1 className="text-2xl">Edit Expense Page</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
-              <Route path="goals" element={<div className="p-8 text-center"><h1 className="text-2xl">Financial Goals Page</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
-              <Route path="income" element={<div className="p-8 text-center"><h1 className="text-2xl">Income Management Page</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
-              <Route path="buddies" element={<div className="p-8 text-center"><h1 className="text-2xl">Buddies Page</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
-              <Route path="ai" element={<div className="p-8 text-center"><h1 className="text-2xl">AI Financial Advisor</h1><p className="text-muted-foreground">Coming soon...</p></div>} />
+              <Route path="expenses/add" element={<AddExpense />} />
+              <Route path="expenses/edit/:id" element={<EditExpense />} />
+              <Route
+                path="goals"
+                element={
+                  <div className="p-8 text-center">
+                    <h1 className="text-2xl">Financial Goals Page</h1>
+                    <p className="text-muted-foreground">Coming soon...</p>
+                  </div>
+                }
+              />
+              <Route
+                path="income"
+                element={
+                  <div className="p-8 text-center">
+                    <h1 className="text-2xl">Income Management Page</h1>
+                    <p className="text-muted-foreground">Coming soon...</p>
+                  </div>
+                }
+              />
+              <Route
+                path="buddies"
+                element={
+                  <div className="p-8 text-center">
+                    <h1 className="text-2xl">Buddies Page</h1>
+                    <p className="text-muted-foreground">Coming soon...</p>
+                  </div>
+                }
+              />
+              <Route
+                path="ai"
+                element={
+                  <div className="p-8 text-center">
+                    <h1 className="text-2xl">AI Financial Advisor</h1>
+                    <p className="text-muted-foreground">Coming soon...</p>
+                  </div>
+                }
+              />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,45 +1,55 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Wallet } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Link } from "react-router-dom";
+import { Eye, EyeOff, Wallet } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useLogin } from "@/hooks/auth";
+import type { ApiError } from "@/lib/api-client";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
   const { toast } = useToast();
+
+  const loginMutation = useLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    try {
-      // Replace with actual API call
-      console.log('Login attempt:', { email, password });
-      
-      // Mock successful login
-      setTimeout(() => {
-        toast({
-          title: "Welcome back!",
-          description: "You have been successfully logged in.",
-        });
-        navigate('/dashboard');
-        setIsLoading(false);
-      }, 1000);
-    } catch (error) {
+    if (!email || !password) {
       toast({
-        title: "Login failed",
-        description: "Please check your credentials and try again.",
+        title: "Validation Error",
+        description: "Please fill in all fields.",
         variant: "destructive",
       });
-      setIsLoading(false);
+      return;
+    }
+
+    try {
+      await loginMutation.mutateAsync({ email, password });
+
+      toast({
+        title: "Welcome back!",
+        description: "You have been successfully logged in.",
+      });
+    } catch (error) {
+      const apiError = error as ApiError;
+      toast({
+        title: "Login failed",
+        description:
+          apiError.error || "Please check your credentials and try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -53,7 +63,7 @@ const Login = () => {
           <div>
             <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
             <CardDescription>
-              Sign in to your ExpenseTracker account
+              Sign in to your SmartSpend account
             </CardDescription>
           </div>
         </CardHeader>
@@ -69,6 +79,7 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="h-11"
+                disabled={loginMutation.isPending}
               />
             </div>
             <div className="space-y-2">
@@ -76,12 +87,13 @@ const Login = () => {
               <div className="relative">
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="h-11 pr-10"
+                  disabled={loginMutation.isPending}
                 />
                 <Button
                   type="button"
@@ -89,6 +101,7 @@ const Login = () => {
                   size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
+                  disabled={loginMutation.isPending}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -98,20 +111,23 @@ const Login = () => {
                 </Button>
               </div>
             </div>
-            <Button 
-              type="submit" 
-              className="w-full h-11" 
-              disabled={isLoading}
+            <Button
+              type="submit"
+              className="w-full h-11"
+              disabled={loginMutation.isPending}
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {loginMutation.isPending ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-          
+
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-primary hover:text-primary/80 font-medium">
-                Sign up
+              Don't have an account?{" "}
+              <Link
+                to="/register"
+                className="text-primary hover:text-primary/80 font-medium"
+              >
+                Create one
               </Link>
             </p>
           </div>
