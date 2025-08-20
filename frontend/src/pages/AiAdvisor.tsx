@@ -56,39 +56,40 @@ const AiAdvisor = () => {
   const handleGetAdvice = async () => {
     if (!question.trim()) return;
 
-    let targetConversation = currentConversation;
-    if (!targetConversation) {
-      // Start new conversation if none selected
-      targetConversation = await startNewConversation(
-        question.slice(0, 50) + "..."
-      );
-      if (!targetConversation) return;
-    }
-
-    // Check context limit
-    if (checkContextLimit(targetConversation)) {
-      const newConversation = await startNewConversation(
-        question.slice(0, 50) + "..."
-      );
-      if (!newConversation) return;
-      targetConversation = newConversation;
-    }
-
-    const response = await getAdvice({
-      question,
-      conversationId: targetConversation._id,
-    });
-
-    if (response?.conversation) {
-      // Convert the response conversation format to match our Conversation type
-      updateCurrentConversation({
-        _id: response.conversation.id,
-        title: response.conversation.title,
-        messages: response.conversation.messages,
-        lastUpdated: new Date().toISOString(),
-        isActive: true,
+    // Check if current conversation is at context limit
+    if (currentConversation && checkContextLimit(currentConversation)) {
+      // Context limit reached, conversation will be auto-created by backend
+      const response = await getAdvice({ question });
+      if (response?.conversation) {
+        updateCurrentConversation({
+          _id: response.conversation.id,
+          title: response.conversation.title,
+          messages: response.conversation.messages,
+          lastUpdated: new Date().toISOString(),
+          isActive: true,
+        });
+        fetchConversations(); // Refresh conversation list
+      }
+    } else {
+      // Continue existing conversation or create new one automatically
+      const response = await getAdvice({
+        question,
+        conversationId: currentConversation?._id,
       });
+
+      if (response?.conversation) {
+        updateCurrentConversation({
+          _id: response.conversation.id,
+          title: response.conversation.title,
+          messages: response.conversation.messages,
+          lastUpdated: new Date().toISOString(),
+          isActive: true,
+        });
+        fetchConversations(); // Refresh conversation list
+      }
     }
+
+    setQuestion(""); // Clear the question input
   };
 
   const handleAnalyzeSpending = async () => {
@@ -115,7 +116,6 @@ const AiAdvisor = () => {
         conversations={conversations}
         currentConversationId={currentConversation?._id}
         onConversationSelect={handleSelectConversation}
-        onNewConversation={startNewConversation}
         onDeleteConversation={removeConversation}
         isLoading={isConversationsLoading}
       />
@@ -145,6 +145,40 @@ const AiAdvisor = () => {
           </TabsList>
 
           <TabsContent value="advice" className="space-y-6">
+            {currentConversation && currentConversation.messages.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Conversation History</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-[400px]">
+                    <div className="space-y-4">
+                      {currentConversation.messages.map((message, index) => (
+                        <div
+                          key={index}
+                          className={`p-4 rounded-lg ${
+                            message.role === "user"
+                              ? "bg-primary/10 ml-8"
+                              : "bg-muted mr-8"
+                          }`}
+                        >
+                          <div className="font-medium mb-2">
+                            {message.role === "user" ? "You" : "AI Advisor"}
+                          </div>
+                          <div
+                            className="prose prose-sm dark:prose-invert"
+                            style={{ whiteSpace: "pre-wrap" }}
+                          >
+                            {message.content}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>Ask a Financial Question</CardTitle>

@@ -1,14 +1,5 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +17,6 @@ interface ConversationSidebarProps {
   conversations: ConversationSummary[];
   currentConversationId?: string;
   onConversationSelect: (conversationId: string) => void;
-  onNewConversation: (title: string) => void;
   onDeleteConversation: (conversationId: string) => void;
   isLoading?: boolean;
 }
@@ -35,53 +25,16 @@ export function ConversationSidebar({
   conversations,
   currentConversationId,
   onConversationSelect,
-  onNewConversation,
   onDeleteConversation,
   isLoading,
 }: ConversationSidebarProps) {
-  const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-
-  const handleNewConversation = () => {
-    if (newTitle.trim()) {
-      onNewConversation(newTitle.trim());
-      setNewTitle("");
-      setIsNewDialogOpen(false);
-    }
-  };
-
   return (
     <div className="w-64 border-r h-full flex flex-col">
       <div className="p-4 border-b">
-        <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full">New Conversation</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>New Conversation</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-4">
-              <Input
-                placeholder="Conversation title"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleNewConversation();
-                  }
-                }}
-              />
-              <Button
-                className="w-full"
-                onClick={handleNewConversation}
-                disabled={!newTitle.trim()}
-              >
-                Create
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <h2 className="font-semibold text-lg">Conversations</h2>
+        <p className="text-sm text-muted-foreground">
+          Ask a question to start a new conversation
+        </p>
       </div>
 
       <ScrollArea className="flex-1">

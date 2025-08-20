@@ -129,7 +129,7 @@ export const useConversations = () => {
         toast({
           title: "Context Limit Warning",
           description:
-            "This conversation is approaching its context limit. Consider starting a new conversation soon.",
+            "This conversation is approaching its context limit. A new conversation will be created automatically for your next question.",
           variant: "warning",
         });
       }

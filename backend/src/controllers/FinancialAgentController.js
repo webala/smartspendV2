@@ -25,6 +25,54 @@ const callOllama = async (prompt) => {
   }
 };
 
+// Helper function to generate a meaningful conversation title from a question
+const generateConversationTitle = (question) => {
+  // Remove common question starters
+  const cleanQuestion = question
+    .trim()
+    .replace(/^(can you|could you|please|hey|hi|hello|um|so|well|okay|basically|)/i, '')
+    .replace(/[?.,!]/g, '')
+    .trim();
+
+  // Split into words
+  const words = cleanQuestion.split(' ');
+
+  if (words.length <= 5) {
+    // If the question is short, use it as is
+    return cleanQuestion.charAt(0).toUpperCase() + cleanQuestion.slice(1);
+  }
+
+  // Try to find key phrases that indicate the topic
+  const topicIndicators = [
+    'about', 'regarding', 'concerning', 'on', 'for', 'with',
+    'budget', 'savings', 'income', 'expenses', 'investing',
+    'debt', 'mortgage', 'loan', 'credit', 'retirement',
+    'investment', 'tax', 'insurance'
+  ];
+
+  let title = '';
+  
+  // Look for topic indicators and use the following words
+  for (let i = 0; i < words.length - 1; i++) {
+    if (topicIndicators.includes(words[i].toLowerCase())) {
+      // Take up to 3 words after the indicator
+      title = words.slice(i + 1, i + 4).join(' ');
+      break;
+    }
+  }
+
+  // If no topic indicator found, take first 4-5 meaningful words
+  if (!title) {
+    title = words
+      .filter(word => word.length > 2) // Skip very short words
+      .slice(0, 4)
+      .join(' ');
+  }
+
+  // Capitalize first letter and add "Advice on" prefix
+  return 'Advice on ' + title.charAt(0).toUpperCase() + title.slice(1);
+};
+
 // Get financial advice from Ollama
 const Conversation = require('../models/Conversation');
 
@@ -41,9 +89,11 @@ const getFinancialAdvice = async (req, res) => {
         return res.status(404).json({ error: 'Conversation not found' });
       }
     } else {
+      // Generate a meaningful title from the question
+      const title = generateConversationTitle(question);
       conversation = new Conversation({
         userId,
-        title: question.slice(0, 50) + '...' // Use first 50 chars of question as title
+        title
       });
     }
 

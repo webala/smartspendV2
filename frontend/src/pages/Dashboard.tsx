@@ -16,68 +16,67 @@ import {
   DollarSign,
   Calendar,
   Users,
+  RefreshCw,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatCurrency } from "@/utils/currency";
+import { useDashboard } from "@/hooks/dashboard";
 
 const Dashboard = () => {
-  // Mock data - replace with real data from your API
-  const mockData = {
-    totalExpenses: 245075, // KES
-    monthlyIncome: 500000, // KES
-    activeGoals: 3,
-    totalBuddies: 5,
-    recentExpenses: [
-      {
-        id: 1,
-        description: "Grocery Shopping",
-        amount: 8550,
-        category: "Food",
-        date: "2025-01-15",
-      },
-      {
-        id: 2,
-        description: "Gas Station",
-        amount: 4500,
-        category: "Transport",
-        date: "2025-01-14",
-      },
-      {
-        id: 3,
-        description: "Netflix Subscription",
-        amount: 1599,
-        category: "Entertainment",
-        date: "2025-01-13",
-      },
-    ],
-    goals: [
-      {
-        id: 1,
-        title: "Emergency Fund",
-        current: 250000,
-        target: 500000,
-        progress: 50,
-      },
-      {
-        id: 2,
-        title: "Vacation Savings",
-        current: 75000,
-        target: 200000,
-        progress: 37.5,
-      },
-      {
-        id: 3,
-        title: "New Laptop",
-        current: 30000,
-        target: 120000,
-        progress: 25,
-      },
-    ],
-  };
+  const { data, loading, error, refreshDashboard } = useDashboard();
 
-  const remainingBudget = mockData.monthlyIncome - mockData.totalExpenses;
-  const budgetUsedPercentage =
-    (mockData.totalExpenses / mockData.monthlyIncome) * 100;
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
+            Loading Dashboard... ⏳
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Fetching your financial overview
+          </p>
+        </div>
+
+        {/* Loading skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="border-0 shadow-lg animate-pulse">
+              <CardHeader>
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-muted rounded w-1/2 mb-2"></div>
+                <div className="h-3 bg-muted rounded w-2/3"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error || !data) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
+            Oops! Something went wrong 😞
+          </h1>
+          <p className="text-muted-foreground text-lg mb-4">
+            {error || "Failed to load dashboard data"}
+          </p>
+          <Button onClick={refreshDashboard} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { overview, recentExpenses, goals } = data;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -89,6 +88,15 @@ const Dashboard = () => {
         <p className="text-muted-foreground text-lg">
           Here's your financial overview for this month
         </p>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={refreshDashboard}
+          className="mt-2 gap-2"
+        >
+          <RefreshCw className="h-3 w-3" />
+          Refresh
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -102,7 +110,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(mockData.totalExpenses)}
+              {formatCurrency(overview.totalExpenses)}
             </div>
             <p className="text-xs text-muted-foreground">This month</p>
           </CardContent>
@@ -117,10 +125,10 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(mockData.monthlyIncome)}
+              {formatCurrency(overview.monthlyIncome)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {formatCurrency(remainingBudget)} remaining
+              {formatCurrency(overview.remainingBudget)} remaining
             </p>
           </CardContent>
         </Card>
@@ -131,7 +139,7 @@ const Dashboard = () => {
             <Target className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockData.activeGoals}</div>
+            <div className="text-2xl font-bold">{overview.activeGoals}</div>
             <p className="text-xs text-muted-foreground">Goals in progress</p>
           </CardContent>
         </Card>
@@ -142,7 +150,7 @@ const Dashboard = () => {
             <Users className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockData.totalBuddies}</div>
+            <div className="text-2xl font-bold">{overview.totalBuddies}</div>
             <p className="text-xs text-muted-foreground">Financial partners</p>
           </CardContent>
         </Card>
@@ -156,19 +164,19 @@ const Dashboard = () => {
             Budget Overview
           </CardTitle>
           <CardDescription>
-            You've used {budgetUsedPercentage.toFixed(1)}% of your monthly
-            budget
+            You've used {overview.budgetUsedPercentage.toFixed(1)}% of your
+            monthly budget
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Progress value={budgetUsedPercentage} className="h-3" />
+            <Progress value={overview.budgetUsedPercentage} className="h-3" />
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
-                Spent: {formatCurrency(mockData.totalExpenses)}
+                Spent: {formatCurrency(overview.totalExpenses)}
               </span>
               <span className="text-muted-foreground">
-                Budget: {formatCurrency(mockData.monthlyIncome)}
+                Budget: {formatCurrency(overview.monthlyIncome)}
               </span>
             </div>
           </div>
@@ -192,28 +200,44 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockData.recentExpenses.map((expense) => (
-                <div
-                  key={expense.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-accent/50"
-                >
-                  <div>
-                    <p className="font-medium">{expense.description}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {expense.category} • {expense.date}
-                    </p>
+              {recentExpenses.length > 0 ? (
+                recentExpenses.map((expense) => (
+                  <div
+                    key={expense.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-accent/50"
+                  >
+                    <div>
+                      <p className="font-medium">{expense.description}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {expense.category} • {expense.date}
+                      </p>
+                    </div>
+                    <span className="font-bold text-lg">
+                      {formatCurrency(expense.amount)}
+                    </span>
                   </div>
-                  <span className="font-bold text-lg">
-                    {formatCurrency(expense.amount)}
-                  </span>
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">
+                    No recent expenses
+                  </p>
+                  <Button asChild variant="outline">
+                    <Link to="/expenses/add">
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      Add Your First Expense
+                    </Link>
+                  </Button>
                 </div>
-              ))}
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/expenses/add">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Add New Expense
-                </Link>
-              </Button>
+              )}
+              {recentExpenses.length > 0 && (
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/expenses/add">
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    Add New Expense
+                  </Link>
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -234,21 +258,47 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {mockData.goals.map((goal) => (
-                <div key={goal.id} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-medium">{goal.title}</h4>
-                    <span className="text-sm text-muted-foreground">
-                      {formatCurrency(goal.current)} /{" "}
-                      {formatCurrency(goal.target)}
-                    </span>
+              {goals.length > 0 ? (
+                goals.map((goal) => (
+                  <div key={goal.id} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">{goal.title}</h4>
+                      <span className="text-sm text-muted-foreground">
+                        {formatCurrency(goal.current)} /{" "}
+                        {formatCurrency(goal.target)}
+                      </span>
+                    </div>
+                    <Progress value={goal.progress} className="h-2" />
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-muted-foreground">
+                        {goal.progress.toFixed(1)}% complete
+                      </p>
+                      {goal.isOverdue && (
+                        <span className="text-xs text-red-500 font-medium">
+                          Overdue
+                        </span>
+                      )}
+                      {goal.isCompleted && (
+                        <span className="text-xs text-green-500 font-medium">
+                          Completed! 🎉
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <Progress value={goal.progress} className="h-2" />
-                  <p className="text-xs text-muted-foreground">
-                    {goal.progress.toFixed(1)}% complete
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground mb-4">
+                    No financial goals yet
                   </p>
+                  <Button asChild variant="outline">
+                    <Link to="/goals">
+                      <Target className="h-4 w-4 mr-2" />
+                      Create Your First Goal
+                    </Link>
+                  </Button>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>

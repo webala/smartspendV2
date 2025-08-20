@@ -25,6 +25,7 @@ const goalRoutes = require('./routes/goals');
 const incomeRoutes = require('./routes/income');
 const buddyRoutes = require('./routes/buddies');
 const aiRoutes = require('./routes/ai');
+const dashboardRoutes = require('./routes/dashboard');
 
 // Routes
 app.get('/', (req, res) => {
@@ -37,7 +38,8 @@ app.get('/', (req, res) => {
       goals: '/goals',
       income: '/income',
       buddies: '/buddies',
-      ai: '/ai'
+      ai: '/ai',
+      dashboard: '/dashboard'
     }
   });
 });
@@ -60,6 +62,7 @@ app.use('/goals', goalRoutes);
 app.use('/income', incomeRoutes);
 app.use('/buddies', buddyRoutes);
 app.use('/ai', aiRoutes);
+app.use('/dashboard', dashboardRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
