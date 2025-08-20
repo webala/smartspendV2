@@ -5,7 +5,7 @@ const FinancialGoal = require('../models/FinancialGoal');
 
 // Ollama API configuration
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama2';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2';
 
 // Helper function to call Ollama API
 const callOllama = async (prompt) => {
@@ -15,7 +15,7 @@ const callOllama = async (prompt) => {
       prompt: prompt,
       stream: false
     }, {
-      timeout: 30000 // 30 second timeout
+      timeout: 60000 // 60 second timeout
     });
 
     return response.data.response;
@@ -26,10 +26,26 @@ const callOllama = async (prompt) => {
 };
 
 // Get financial advice from Ollama
+const Conversation = require('../models/Conversation');
+
 const getFinancialAdvice = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { question, context } = req.body;
+    const { question, context, conversationId } = req.body;
+    
+    // Get or create conversation
+    let conversation;
+    if (conversationId) {
+      conversation = await Conversation.findOne({ _id: conversationId, userId });
+      if (!conversation) {
+        return res.status(404).json({ error: 'Conversation not found' });
+      }
+    } else {
+      conversation = new Conversation({
+        userId,
+        title: question.slice(0, 50) + '...' // Use first 50 chars of question as title
+      });
+    }
 
     // Get user's financial data
     const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
@@ -68,11 +84,11 @@ const getFinancialAdvice = async (req, res) => {
     // Create context for AI
     const financialContext = `
 User's Financial Data:
-- Total Income (last 3 months): $${totalIncome}
-- Total Expenses (last 3 months): $${totalExpenses}
-- Net Savings: $${totalIncome - totalExpenses}
+- Total Income (last 3 months): ks ${totalIncome}
+- Total Expenses (last 3 months): ksh ${totalExpenses}
+- Net Savings: ksh ${totalIncome - totalExpenses}
 - Expenses by Category: ${JSON.stringify(expensesByCategory)}
-- Active Financial Goals: ${goals.map(g => `${g.title} (Target: $${g.targetAmount}, Current: $${g.currentAmount}, Progress: ${g.progress}%)`).join(', ')}
+- Active Financial Goals: ${goals.map(g => `${g.title} (Target: ksh ${g.targetAmount}, Current: ksh ${g.currentAmount}, Progress: ${g.progress}%)`).join(', ')}
 - Number of Active Goals: ${goals.length}
 
 ${context ? `Additional Context: ${context}` : ''}
@@ -80,9 +96,26 @@ ${context ? `Additional Context: ${context}` : ''}
 Question: ${question || 'Please provide general financial advice based on my data.'}
 
 Please provide personalized financial advice based on this data. Be specific and actionable.
+
 `;
 
-    const aiResponse = await callOllama(financialContext);
+    // Get conversation history context
+    const conversationContext = conversation.getContext();
+    const conversationHistory = conversationContext.map(msg => 
+      `${msg.role}: ${msg.content}`
+    ).join('\n');
+
+    // Combine conversation history with financial context
+    const fullContext = `
+${conversationHistory ? `Previous Conversation:\n${conversationHistory}\n\n` : ''}
+${financialContext}
+`;
+
+    const aiResponse = await callOllama(fullContext);
+
+    // Save the exchange to conversation
+    await conversation.addMessage('user', question);
+    await conversation.addMessage('assistant', aiResponse);
 
     res.json({
       advice: aiResponse,
@@ -92,6 +125,11 @@ Please provide personalized financial advice based on this data. Be specific and
         netSavings: totalIncome - totalExpenses,
         activeGoals: goals.length,
         expenseCategories: Object.keys(expensesByCategory).length
+      },
+      conversation: {
+        id: conversation._id,
+        title: conversation.title,
+        messages: conversation.messages
       }
     });
   } catch (error) {

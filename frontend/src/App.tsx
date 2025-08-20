@@ -11,7 +11,10 @@ import Register from "./pages/Register";
 import Expenses from "./pages/Expenses";
 import AddExpense from "./pages/AddExpense";
 import EditExpense from "./pages/EditExpense";
+import FinancialGoals from "./pages/FinancialGoals";
 import NotFound from "./pages/NotFound";
+import Income from "./pages/Income";
+import AiAdvisor from "./pages/AiAdvisor";
 
 const queryClient = new QueryClient();
 
@@ -31,24 +34,8 @@ const App = () => (
               <Route path="expenses" element={<Expenses />} />
               <Route path="expenses/add" element={<AddExpense />} />
               <Route path="expenses/edit/:id" element={<EditExpense />} />
-              <Route
-                path="goals"
-                element={
-                  <div className="p-8 text-center">
-                    <h1 className="text-2xl">Financial Goals Page</h1>
-                    <p className="text-muted-foreground">Coming soon...</p>
-                  </div>
-                }
-              />
-              <Route
-                path="income"
-                element={
-                  <div className="p-8 text-center">
-                    <h1 className="text-2xl">Income Management Page</h1>
-                    <p className="text-muted-foreground">Coming soon...</p>
-                  </div>
-                }
-              />
+              <Route path="goals" element={<FinancialGoals />} />
+              <Route path="income" element={<Income />} />
               <Route
                 path="buddies"
                 element={
@@ -60,12 +47,7 @@ const App = () => (
               />
               <Route
                 path="ai"
-                element={
-                  <div className="p-8 text-center">
-                    <h1 className="text-2xl">AI Financial Advisor</h1>
-                    <p className="text-muted-foreground">Coming soon...</p>
-                  </div>
-                }
+                element={<AiAdvisor />}
               />
             </Route>
             <Route path="*" element={<NotFound />} />

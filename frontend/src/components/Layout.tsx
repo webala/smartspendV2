@@ -39,7 +39,7 @@ const Layout = () => {
   const navigation = [
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "Expenses", href: "/expenses", icon: Wallet },
-    { name: "Add Expense", href: "/expenses/add", icon: PlusCircle },
+    // { name: "Add Expense", href: "/expenses/add", icon: PlusCircle },
     { name: "Goals", href: "/goals", icon: Target },
     { name: "Income", href: "/income", icon: TrendingUp },
     { name: "Buddies", href: "/buddies", icon: Users },

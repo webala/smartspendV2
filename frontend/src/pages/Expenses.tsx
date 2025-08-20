@@ -123,6 +123,11 @@ const Expenses = () => {
   };
 
   if (error) {
+    const apiError = error as unknown;
+    const errorMessage =
+      (apiError as ApiError)?.error ||
+      "Something went wrong while loading your expenses.";
+
     return (
       <div className="space-y-6">
         <Card className="border-0 shadow-lg">
@@ -132,10 +137,7 @@ const Expenses = () => {
               <h3 className="text-lg font-semibold mb-2">
                 Error Loading Expenses
               </h3>
-              <p className="text-muted-foreground">
-                {(error as ApiError).error ||
-                  "Something went wrong while loading your expenses."}
-              </p>
+              <p className="text-muted-foreground">{errorMessage}</p>
             </div>
             <Button onClick={() => window.location.reload()}>Try Again</Button>
           </CardContent>
